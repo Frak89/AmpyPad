@@ -229,6 +229,7 @@ public class PadActivity extends Activity {
         bottomRow.setBackgroundColor(th.bottom);
         modeSw = new Views.ModeSwitch(this, th);
         modeSw.l = this::setModeAnimated;
+        modeSw.setContentDescription("modalita testo pennello");
         bottomRow.addView(modeSw, new LinearLayout.LayoutParams(0, dp(46), 1f));
         bottomRow.addView(Ui.icon(this, th, "◀", v -> neighbour(-1)));
         TextView plus = Ui.chip(this, th, "＋ FOGLIO", this::newPageFrom);
@@ -351,6 +352,7 @@ public class PadActivity extends Activity {
         row.addView(opBar, new LinearLayout.LayoutParams(dp(100), -2));
         brushDot = new Views.Dot(this, th, sheet.ink.color);
         brushDot.setOnClickListener(v -> { Ui.tick(v); pickBrushColor(); });
+        brushDot.setContentDescription("colore pennello");
         row.addView(brushDot, new LinearLayout.LayoutParams(dp(42), dp(42)));
         symBtn = Ui.icon(this, th, "✣", v -> symPanel());
         row.addView(symBtn);
@@ -921,6 +923,7 @@ public class PadActivity extends Activity {
         List<Views.PresetCard> cards = new ArrayList<>();
         for (PaperStyle.Preset p : PaperStyle.PRESETS) {
             Views.PresetCard c = new Views.PresetCard(this, th, p);
+            c.setContentDescription("stile " + p.name);
             c.sel = p.key.equals(page.style.preset);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(74), dp(112)); lp.rightMargin = dp(8);
             strip.addView(c, lp);
@@ -1004,6 +1007,7 @@ public class PadActivity extends Activity {
             LinearLayout cell = new LinearLayout(this);
             cell.setOrientation(LinearLayout.VERTICAL); cell.setGravity(Gravity.CENTER_HORIZONTAL);
             Views.IconCard c = new Views.IconCard(this, th, ic, quillColor());
+            c.setContentDescription("icona " + QuillView.ICON_NAMES[i]);
             c.sel = ic.equals(pr.quillIcon());
             cell.addView(c, new LinearLayout.LayoutParams(dp(66), dp(66)));
             cell.addView(Ui.text(this, QuillView.ICON_NAMES[i], 8, th.muted, true));
