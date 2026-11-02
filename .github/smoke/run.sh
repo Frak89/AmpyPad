@@ -18,11 +18,8 @@ adb install -r out/AmpyPad.apk
 adb logcat -c
 adb shell am start -n it.ampy.ampypad/.PadActivity
 sleep 8
-shot 01_avvio
-tap "zoom piu"; sleep 1.5; tap "zoom piu"; sleep 2
-shot 02_zoom_150
-tap "zoom meno"; sleep 1.5; tap "zoom meno"; sleep 1.5; tap "zoom meno"; sleep 2
-shot 03_zoom_80
+tap "zoom piu"; sleep 2
+shot 02_zoom_125
 tap "zoom"; sleep 2
 tap "modalita" 0.75; sleep 1.5
 tap "forme"; sleep 1.5
@@ -34,12 +31,11 @@ shot 05_stella_maniglie
 adb shell input swipe 520 1120 620 1500 600
 sleep 1
 shot 06_stella_spostata
-# freehand circle + hold → perfect ellipse
-curve 540 800 170 1.0
-sleep 1.4
-adb shell input motionevent UP 710 800
+tap "forme"; sleep 1.5
+tap "forma FRECCIA"; sleep 1.5
+adb shell input swipe 250 1700 800 1450 500
 sleep 1
-shot 07_cerchio_perfetto
+shot 07_freccia
 # scanner via shared photo
 adb push .github/smoke/pagina_curva.jpg /data/local/tmp/p.jpg
 adb shell run-as it.ampy.ampypad mkdir -p cache/scan
@@ -56,13 +52,12 @@ shot 11_filtro
 tap "BIANCO E NERO"; sleep 3
 shot 12_bn
 tap "DOCUMENTO"; sleep 3
-tap "AGGIUNGI PAGINA"; sleep 6
+tap "✓ AGGIUNGI PAGINA"; sleep 6
 shot 13_lista
-tap "SALVA PDF"; sleep 6
-shot 14_pdf
-tap "INVIA EMAIL"; sleep 2
+tap "✉ INVIA EMAIL"; sleep 2
+adb shell input text "prova@example.com"
 shot 15_email_dialog
-tap "INVIA"; sleep 6
+tap "INVIA"; sleep 7
 shot 16_app_email
 adb shell ls -la /sdcard/Download/AmpyPad/ > $OUT/files.txt 2>&1
 adb pull /sdcard/Download/AmpyPad $OUT/pdf

@@ -7,8 +7,12 @@ fx = float(sys.argv[2]) if len(sys.argv) > 2 else 0.5
 for _ in range(4):
     subprocess.run(["adb", "shell", "uiautomator", "dump", "/sdcard/u.xml"], capture_output=True)
     xml = subprocess.run(["adb", "shell", "cat", "/sdcard/u.xml"], capture_output=True, text=True).stdout
-    for m in re.finditer(r'<node [^>]*>', xml):
-        n = m.group(0)
+    nodes = re.findall(r'<node [^>]*>', xml)
+    def val(n, k):
+        m = re.search(' ' + k + '="([^"]*)"', n); return m.group(1) if m else ""
+    exact = [n for n in nodes if val(n, "text").strip() == q or val(n, "content-desc") == q]
+    for n in exact + nodes:
+        m = re.match(r'.*', n)
         t = re.search(r' text="([^"]*)"', n); d = re.search(r'content-desc="([^"]*)"', n)
         if (t and q in t.group(1)) or (d and q in d.group(1)):
             b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', n)

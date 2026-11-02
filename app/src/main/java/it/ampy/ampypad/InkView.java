@@ -63,7 +63,7 @@ public final class InkView extends View {
                     cur.add(minX, minY, cur.size); cur.add(maxX, maxY, cur.size);
                     shaped = true;
                     Ui.clock(InkView.this);
-                    if (l != null) l.onShapeHint("◇ " + Brushes.SHAPE_NAMES[java.util.Arrays.asList(Brushes.SHAPES).indexOf(sh)] + " PERFETTO");
+                    if (l != null) l.onShapeHint("◇ FORMA PERFETTA: " + Brushes.SHAPE_NAMES[java.util.Arrays.asList(Brushes.SHAPES).indexOf(sh)]);
                     invalidate();
                     return;
                 }

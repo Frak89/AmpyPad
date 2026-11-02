@@ -413,6 +413,9 @@ public class PadActivity extends Activity {
         pick.addView(brushLbl);
         pick.setOnClickListener(v -> { Ui.tick(v); brushPanel(); });
         row.addView(pick);
+        shapeBtn = Ui.icon(this, th, "◇", v -> shapePanel());
+        shapeBtn.setContentDescription("forme");
+        row.addView(shapeBtn);
         row.addView(Ui.text(this, "  ⌀", 14, th.muted, true));
         sizeBar = new SeekBar(this); sizeBar.setMax(79);
         sizeBar.setOnSeekBarChangeListener(seek(v -> { sheet.ink.size = (v + 1) / 2f; pr.put("brushSize", sheet.ink.size); refreshBrushUi(); }));
@@ -425,9 +428,6 @@ public class PadActivity extends Activity {
         brushDot.setOnClickListener(v -> { Ui.tick(v); pickBrushColor(); });
         brushDot.setContentDescription("colore pennello");
         row.addView(brushDot, new LinearLayout.LayoutParams(dp(42), dp(42)));
-        shapeBtn = Ui.icon(this, th, "◇", v -> shapePanel());
-        shapeBtn.setContentDescription("forme");
-        row.addView(shapeBtn);
         symBtn = Ui.icon(this, th, "✣", v -> symPanel());
         row.addView(symBtn);
         layerBtn = Ui.icon(this, th, "⧉", v -> toggleLayer());
