@@ -200,17 +200,17 @@ public final class Brushes {
             case "acquerello": {
                 Path base = new Path(smoothPath(s));
                 p.setStyle(Paint.Style.STROKE);
-                p.setMaskFilter(new BlurMaskFilter(Math.max(0.5f, sz * 0.7f), BlurMaskFilter.Blur.NORMAL));
+                p.setMaskFilter(new BlurMaskFilter(Math.max(0.8f, sz * 1.1f), BlurMaskFilter.Blur.NORMAL));
                 for (int k = 0; k < 4; k++) {
                     c.save();
-                    c.translate((r.nextFloat() - 0.5f) * sz * 0.6f, (r.nextFloat() - 0.5f) * sz * 0.6f);
-                    p.setStrokeWidth(sz * (1.6f + r.nextFloat() * 1.0f));
+                    c.translate((r.nextFloat() - 0.5f) * sz * 1.2f, (r.nextFloat() - 0.5f) * sz * 1.2f);
+                    p.setStrokeWidth(sz * (3.2f + r.nextFloat() * 1.8f));
                     p.setColor(alpha(s.color, 0.55f));
                     c.drawPath(base, p);
                     c.restore();
                 }
                 p.setMaskFilter(null);
-                p.setStrokeWidth(sz * 2.1f); p.setColor(alpha(s.color, 0.25f));
+                p.setStrokeWidth(sz * 3.8f); p.setColor(alpha(s.color, 0.25f));
                 c.drawPath(base, p);
                 break;
             }

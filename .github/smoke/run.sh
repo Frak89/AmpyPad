@@ -16,45 +16,89 @@ PY
   adb shell "$(cat /tmp/c.sh)"
 }
 adb install -r out/AmpyPad.apk
+adb shell settings put global window_animation_scale 1
 adb logcat -c
 adb shell am start -n it.ampy.ampypad/.PadActivity
 sleep 8
-stats() { adb shell uiautomator dump /sdcard/u.xml >/dev/null; adb shell cat /sdcard/u.xml | grep -o 'text="[^"]*TRATTI"' >> $OUT/stats.txt; }
-tap "modalita" 0.75
+shot 01_avvio
+tap "Scrivi, disegna" 0.9
+sleep 1
+adb shell input keyevent KEYCODE_MOVE_END
+adb shell input text "%sCiao%sAmpyPad"
+shot 02_piuma_scrive
+sleep 1.3
+shot 03_piuma_si_posa
+sleep 1.5
+shot 04_dopo
+adb shell input keyevent KEYCODE_ENTER
+adb shell input text "-%sprimo%spunto"
 sleep 2
-curve 540 1300 220 1.5
-sleep 2.5
-stats
-tap "PENNA"
-sleep 1.5
-tap "ACQUERELLO"
-sleep 2
-curve 420 1000 170 1
-sleep 2.5
-stats
-shot 01_acquerello
-tap "ACQUERELLO"
-sleep 1.5
-tap "NEON"
-sleep 1.5
-tap "✣"
-sleep 1.5
-tap "CALEIDOSCOPIO"
-sleep 1.5
+shot 05_elenco
 adb shell input keyevent KEYCODE_BACK
 sleep 1
-curve 600 1200 120 0.7
-sleep 0.5
-shot 02_neon_caleido
-sleep 2.5
-stats
-shot 03_dopo
-tap "⇩"
+tap "modalita" 0.75
 sleep 1.5
+shot 06_pennello
+curve 540 1300 220 1.5
+sleep 0.4
+shot 07_disegno_piuma
+sleep 2.5
+tap "PENNA"
+sleep 1.5
+shot 08_pannello_pennelli
+tap "ACQUERELLO"
+sleep 1
+curve 400 1000 160 1
+XY=$(python3 $F "ACQUERELLO") && set -- $XY && adb shell input swipe 1000 $2 150 $2 300
+sleep 1
+tap "colore pennello"
+sleep 1.5
+shot 09_tavolozza
+tap "APPLICA"
+sleep 1
+tap "▤"
+sleep 1.5
+shot 10_stile_foglio
+tap "stile LAVAGNA"
+sleep 0.35
+shot 11_cambio_stile
+sleep 1.5
+shot 12_lavagna
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+tap "✒"
+sleep 1.5
+shot 13_piuma_pannello
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+tap "FOGLIO" 0.5
+sleep 0.3
+shot 14_transizione
+sleep 2
+shot 15_nuovo_foglio
+tap "☰"
+sleep 1.2
+shot 16_quaderni
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+tap "⇩"
+sleep 1.2
+shot 17_esporta
+tap "PDF · FOGLIO"
+sleep 5
+shot 18_pdf
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+tap "◀"
+sleep 2
+tap "⇩"
+sleep 1.2
 tap "PNG · FOGLIO"
-sleep 6
-shot 04_png
-adb shell ls -la /sdcard/Pictures/AmpyPad/ > $OUT/files.txt 2>&1
+sleep 5
+adb shell ls -la /sdcard/Download/AmpyPad/ > $OUT/files.txt 2>&1
+adb pull /sdcard/Download/AmpyPad $OUT/pdf
 adb pull /sdcard/Pictures/AmpyPad $OUT/png
+adb shell ls -la /sdcard/Pictures/AmpyPad/ >> $OUT/files.txt 2>&1
 adb logcat -d > $OUT/logcat.txt
+grep -E "FATAL|AndroidRuntime|ampypad" $OUT/logcat.txt | head -80 > $OUT/errors.txt
 exit 0
