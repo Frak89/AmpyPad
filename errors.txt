@@ -1,0 +1,60 @@
+11-02 17:50:03.898  2700  3015 W WPCategoryProvider: android.content.pm.PackageManager$NameNotFoundException: com.google.pixel.livewallpaper
+11-02 17:50:04.315  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:04.566  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:04.602  1414  1484 W AsyncOperation: OperationException[Status{statusCode=unknown status code: 29503, resolution=null}]
+11-02 17:50:05.999  1665  2198 W AiAiFed : java.lang.IllegalArgumentException: Unsupported response code3
+11-02 17:50:06.484  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:06.485  1053  1053 W Telephony: registerImsRegistrationCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:06.792  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:06.792  1053  1053 W Telephony: registerImsRegistrationCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:07.031  1414  2649 I ChimeraSrvcProxy: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl
+11-02 17:50:07.059  2283  3077 E PhenotypeFlagCommitter: java.util.concurrent.TimeoutException: Timed out waiting for Task
+11-02 17:50:07.133  1665  2989 W AiAiAutofill: java.lang.SecurityException: caller is not user's Augmented Autofill Service
+11-02 17:50:07.427  1665  2197 W AiAiFed : java.lang.IllegalArgumentException: Unsupported response code3
+11-02 17:50:07.851   524   563 W ProcessCpuTracker: Failed to stat(/proc/3184): android.system.ErrnoException: stat failed: ENOENT (No such file or directory)
+11-02 17:50:07.879   524   563 W ProcessCpuTracker: Failed to stat(/proc/3189): android.system.ErrnoException: stat failed: ENOENT (No such file or directory)
+11-02 17:50:08.742  1465  3073 W ConfigFileUtils: Failed to read asset ChimeraModuleSetList.pb: java.io.FileNotFoundException: ChimeraModuleSetList.pb
+11-02 17:50:08.778   842   924 E KeyguardUpdateMonitorLog: java.lang.Exception: Called by
+11-02 17:50:08.778   842   924 E KeyguardUpdateMonitorLog: java.lang.Exception: Called by
+11-02 17:50:08.916  1576  1607 W WellbeingSettingsProvid: java.util.concurrent.TimeoutException: Waited 5000 milliseconds (plus 416031 nanoseconds delay) for lki@b4f8a54[status=PENDING, info=[inputFuture=[lkh@dfbadfd[status=PENDING, setFuture=[ljp@1da5af2[status=PENDING, info=[inputFuture=[lki@adaa543[status=PENDING, info=[inputFuture=[lki@244f7c0[status=PENDING, info=[inputFuture=[lld@95a2cf9[status=PENDING, info=[futures=[lki@6af343e[status=PENDING, info=[inputFuture=[lki@78529f[status=PENDING, info=[inputFuture=[lmb@261cfec[status=PENDING, info=[delegate=[lng@d879fb5[status=PENDING, setFuture=[lki@66564a[status=PENDING, info=[inputFuture=[lkh@11979bb[status=PENDING, info=[inputFuture=[lmb@c91fed8[status=PENDING, info=[delegate=[lng@8df8231[status=PENDING, setFuture=[lkh@3bb8d16[status=PENDING, info=[function=[propagating=[cac@dbf697]]]]]]]]]], function=[propagating=[bwd@2943084]]]]], function=[propagating=[bwc@9f9106d]]]]]]]]]], function=[propagating=[bvr@35b64a2]]]]], function=[propagating=[cur@ddf6533]]]]]]]], function=[propagating=[dce@165d0f0]]]]], function=[propagating=[bvq@7a34669]]]]], exceptionType=[class java.lang.Throwable], fallback=[propagating=[bwc@e2f28ee]]]]]]], function=[propagating=[bvq@ea1218f]]]]
+11-02 17:50:09.677  1414  1489 W AsyncOperation: OperationException[Status{statusCode=unknown status code: 29503, resolution=null}]
+11-02 17:50:09.886  3055  3178 E PhenotypeFlagCommitter: java.util.concurrent.TimeoutException: Timed out waiting for Task
+11-02 17:50:10.664  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:10.948  1414  3146 W AsyncOperation: OperationException[Status{statusCode=unknown status code: 29503, resolution=null}]
+11-02 17:50:11.279   337   337 I netd    : networkAddInterface(101, eth0) -> ServiceSpecificException(64, "Machine is not on the network") <0.07ms>
+11-02 17:50:11.279   524   768 W ConnectivityService: Exception adding interface: android.os.ServiceSpecificException: Machine is not on the network (code 64)
+11-02 17:50:11.285   337   337 I netd    : networkAddRouteParcel(101, RouteInfoParcel{destination: 10.0.2.0/24, ifName: eth0, nextHop: , mtu: 0}) -> ServiceSpecificException(64, "Machine is not on the network") <0.02ms>
+11-02 17:50:11.286   524   768 E ConnectivityService: Exception in networkAddRouteParcel for non-gateway: android.os.ServiceSpecificException: Machine is not on the network (code 64)
+11-02 17:50:11.286   337   337 I netd    : networkAddRouteParcel(101, RouteInfoParcel{destination: 0.0.0.0/0, ifName: eth0, nextHop: 10.0.2.2, mtu: 1500}) -> ServiceSpecificException(64, "Machine is not on the network") <0.02ms>
+11-02 17:50:11.286   524   768 E ConnectivityService: Exception in networkAddRouteParcel for gateway: android.os.ServiceSpecificException: Machine is not on the network (code 64)
+11-02 17:50:11.822  1414  3146 W AsyncOperation: OperationException[Status{statusCode=unknown status code: 29503, resolution=null}]
+11-02 17:50:11.824  1414  3146 W AsyncOperation: OperationException[Status{statusCode=unknown status code: 29503, resolution=null}]
+11-02 17:50:13.636  1003  1025 E SystemServiceRegistry: android.os.ServiceManager$ServiceNotFoundException: No service published for: ethernet
+11-02 17:50:13.901  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:13.901  1053  1053 W Telephony: registerImsRegistrationCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:13.951  1779  2243 W A       : Exception while fetching versionCode for package[com.google.android.apps.tv.dreamx].
+11-02 17:50:13.951  1779  2243 W A       : android.content.pm.PackageManager$NameNotFoundException: com.google.android.apps.tv.dreamx
+11-02 17:50:14.040  1779  2243 W A       : Exception while fetching versionCode for package[com.google.android.apps.tv.launcherx].
+11-02 17:50:14.040  1779  2243 W A       : android.content.pm.PackageManager$NameNotFoundException: com.google.android.apps.tv.launcherx
+11-02 17:50:14.186  1414  1414 E GmsCoreLogger: java.util.concurrent.ExecutionException: java.util.concurrent.TimeoutException
+11-02 17:50:14.186  1414  1414 E GmsCoreLogger: Caused by: java.util.concurrent.TimeoutException
+11-02 17:50:14.358  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:14.508  1793  3537 W ProviderInstaller: Failed to report request stats: java.lang.NoSuchMethodException: com.google.android.gms.common.security.ProviderInstallerImpl.reportRequestStats2 [class android.content.Context, long, long]
+11-02 17:50:14.967  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:15.469  3045  3574 W id.gms.unstable: Verification of void it.<init>(java.lang.String, java.util.Collection, org.chromium.net.RequestFinishedInfo$Metrics, int, org.chromium.net.UrlResponseInfo, org.chromium.net.CronetException) took 171.483ms (93.30 bytecodes/s) (1656B approximate peak alloc)
+11-02 17:50:15.647   524   617 E RoleControllerManager: java.util.concurrent.TimeoutException
+11-02 17:50:15.740  1414  3242 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-02 17:50:15.753  1465  3515 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-02 17:50:15.850  1465  3515 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-02 17:50:16.083   524   552 D LauncherAppsService: android.os.DeadObjectException
+11-02 17:50:16.103  1414  3242 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-02 17:50:16.201  1779  1779 E OverlaySController: android.os.DeadObjectException
+11-02 17:50:16.535   524   790 E AppWidgetServiceImpl: android.os.DeadObjectException
+11-02 17:50:16.749  1414  2408 E CCTFlatFileLogStore: java.util.concurrent.TimeoutException: Timed out waiting for Task
+11-02 17:50:17.769   524   552 E PackageManager: java.util.concurrent.TimeoutException: [Optimistic Bind] Didn't bind to resolver in time!
+11-02 17:50:18.003  1465  3515 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-02 17:50:18.335  1465  3515 W Conscrypt: Could not set socket write timeout: java.net.SocketException: Socket closed
+11-02 17:50:19.448  1003  1025 E SystemServiceRegistry: android.os.ServiceManager$ServiceNotFoundException: No service published for: ethernet
+11-02 17:50:19.699   524   617 E RoleControllerManager: java.util.concurrent.TimeoutException
+11-02 17:50:19.940  1053  1053 W Telephony: registerMmTelCapabilityCallback: registration failed, no ImsService available. Exception: code: 1
+11-02 17:50:19.943  1053  1053 W Telephony: registerImsRegistrationCallback: registration failed, no ImsService available. Exception: code: 1

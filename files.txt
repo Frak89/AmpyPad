@@ -1,0 +1,2 @@
+total 208
+-rwxrwx--- 1 u0_a170 media_rw 205725 2026-11-02 17:52 Scansione_20261102_175207.pdf
