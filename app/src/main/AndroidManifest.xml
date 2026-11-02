@@ -9,6 +9,13 @@
         <intent>
             <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
         </intent>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
     </queries>
 
     <application
@@ -37,6 +44,18 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ScanActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|keyboard|uiMode|smallestScreenSize"
+            android:windowSoftInputMode="adjustResize" />
+
+        <provider
+            android:name=".ScanProvider"
+            android:authorities="it.ampy.ampypad.scan"
+            android:exported="false"
+            android:grantUriPermissions="true" />
 
         <activity
             android:name=".SettingsActivity"
