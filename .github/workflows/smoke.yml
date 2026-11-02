@@ -6,6 +6,8 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -28,6 +30,10 @@ jobs:
           profile: pixel_6
           disable-animations: false
           script: bash .github/smoke/run.sh
-      - uses: actions/upload-artifact@v4
+      - name: Publish shots to branch smoke-results
         if: always()
-        with: { name: smoke-shots, path: shots }
+        run: |
+          cd shots
+          git init -q && git checkout -q -b smoke-results
+          git add -A && git -c user.name=ci -c user.email=ci@local commit -q -m "shots ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" smoke-results

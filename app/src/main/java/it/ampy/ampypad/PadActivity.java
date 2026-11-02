@@ -1229,7 +1229,7 @@ public class PadActivity extends Activity {
         try {
             if (inkOnly) {
                 Bitmap ink = sheet.ink.inkBitmap();
-                b = ink == null ? null : ink.copy(Bitmap.Config.ARGB_8888, false);
+                b = ink;
             } else b = Exporter.render(sheet, scale);
         } catch (OutOfMemoryError e) { b = null; }
         finishExport(was);

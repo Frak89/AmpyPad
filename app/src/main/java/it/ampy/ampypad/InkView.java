@@ -26,8 +26,9 @@ public final class InkView extends View {
 
     private Model.Page page;
     private final List<Model.Stroke> redo = new ArrayList<>();
-    private Bitmap cache;
-    private Canvas cacheCanvas;
+    private static final int TILE = 2048;
+    private final List<Bitmap> tiles = new ArrayList<>();
+    private int tilesW, tilesH;
     private float u = 1;
     private Listener l;
 
@@ -59,7 +60,6 @@ public final class InkView extends View {
 
     public InkView(Context c) {
         super(c);
-        setLayerType(LAYER_TYPE_SOFTWARE, null);
         guide.setStyle(Paint.Style.STROKE);
     }
 
@@ -75,19 +75,35 @@ public final class InkView extends View {
     public void rebuild() {
         int w = getWidth(), h = getHeight();
         if (w <= 0 || h <= 0) return;
-        if (cache == null || cache.getWidth() != w || cache.getHeight() != h) {
+        if (w != tilesW || h != tilesH || tiles.isEmpty()) {
+            tiles.clear(); tilesW = w; tilesH = h;
             try {
-                cache = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-                cacheCanvas = new Canvas(cache);
-            } catch (OutOfMemoryError e) { cache = null; cacheCanvas = null; return; }
+                for (int top = 0; top < h; top += TILE) tiles.add(Bitmap.createBitmap(w, Math.min(TILE, h - top), Bitmap.Config.ARGB_8888));
+            } catch (OutOfMemoryError e) { tiles.clear(); tilesW = 0; return; }
         }
-        cache.eraseColor(0);
-        if (page != null) {
-            cacheCanvas.save(); cacheCanvas.scale(u, u);
-            for (Model.Stroke s : page.strokes) Brushes.render(cacheCanvas, s);
-            cacheCanvas.restore();
-        }
+        for (Bitmap b : tiles) b.eraseColor(0);
+        if (page != null) for (Model.Stroke s : page.strokes) paint(s);
         invalidate();
+    }
+
+    /** Renders a stroke into every cache tile it may touch. */
+    private void paint(Model.Stroke s) {
+        float minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+        for (int i = 0; i < s.n; i++) { float y = s.pts[i * 3 + 1]; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+        float pad = s.size * 4 + 30;
+        for (int t = 0; t < tiles.size(); t++) {
+            Bitmap b = tiles.get(t);
+            int top = t * TILE;
+            if (s.sym == 0 && ((maxY + pad) * u < top || (minY - pad) * u > top + b.getHeight())) continue;
+            Canvas c = new Canvas(b);
+            c.translate(0, -top);
+            c.scale(u, u);
+            Brushes.render(c, s);
+        }
+    }
+
+    private void drawTiles(Canvas c) {
+        for (int t = 0; t < tiles.size(); t++) c.drawBitmap(tiles.get(t), 0, t * TILE, null);
     }
 
     public float maxStrokeY() {
@@ -97,16 +113,14 @@ public final class InkView extends View {
     }
 
     @Override protected void onDraw(Canvas c) {
-        if (cache != null) {
-            if (cur != null && "gomma".equals(cur.brush)) {
-                int sc = c.saveLayer(null, null);
-                c.drawBitmap(cache, 0, 0, null);
-                c.scale(u, u); Brushes.render(c, cur);
-                c.restoreToCount(sc);
-            } else {
-                c.drawBitmap(cache, 0, 0, null);
-                if (cur != null) { c.save(); c.scale(u, u); Brushes.render(c, cur); c.restore(); }
-            }
+        if (cur != null && "gomma".equals(cur.brush)) {
+            int sc = c.saveLayer(null, null);
+            drawTiles(c);
+            c.scale(u, u); Brushes.render(c, cur);
+            c.restoreToCount(sc);
+        } else {
+            drawTiles(c);
+            if (cur != null) { c.save(); c.scale(u, u); Brushes.render(c, cur); c.restore(); }
         }
         if (enabled && sym != 0) {
             float x = symCx * u, y = symCy * u;
@@ -219,11 +233,7 @@ public final class InkView extends View {
         Model.Stroke s = cur;
         page.strokes.add(s);
         redo.clear();
-        if (cacheCanvas != null) {
-            cacheCanvas.save(); cacheCanvas.scale(u, u);
-            Brushes.render(cacheCanvas, s);
-            cacheCanvas.restore();
-        }
+        paint(s);
         cur = null;
         invalidate();
         if (l != null) l.onStrokesChanged();
@@ -256,5 +266,10 @@ public final class InkView extends View {
         if (l != null) l.onStrokesChanged();
     }
     /** Ink-only bitmap (transparent), for "export drawing only". */
-    public Bitmap inkBitmap() { return cache; }
+    public Bitmap inkBitmap() {
+        if (tiles.isEmpty()) return null;
+        Bitmap out = Bitmap.createBitmap(tilesW, tilesH, Bitmap.Config.ARGB_8888);
+        drawTiles(new Canvas(out));
+        return out;
+    }
 }
