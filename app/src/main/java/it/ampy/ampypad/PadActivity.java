@@ -26,7 +26,10 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.ViewAnimationUtils;
+import android.view.ViewTreeObserver;
 import android.view.WindowInsets;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
@@ -66,7 +69,11 @@ public class PadActivity extends Activity {
     private Editor ed;
     private QuillView quill;
     private TextView subTitle, stats, saved, toastView, focusExit, blockBtn, textColorBar, undoBtn, redoBtn, symBtn, layerBtn, brushLbl;
-    private HorizontalScrollView formatBar, brushBar;
+    private HorizontalScrollView formatBar, brushBar, hscroll;
+    private TextView zoomLbl, shapeBtn;
+    private float zoom = 1f, pinchStartZoom = 1f, pinchScale = 1f, pinchFx, pinchFy;
+    private boolean pinching, pinchCancelled;
+    private ScaleGestureDetector pinch;
     private Views.ModeSwitch modeSw;
     private Views.Thumb brushThumb;
     private Views.Dot brushDot;
@@ -99,6 +106,7 @@ public class PadActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
         getWindow().setStatusBarColor(th.bg);
         getWindow().setNavigationBarColor(th.bg);
+        zoom = Ui.clamp(pr.f("zoom", 1f), 0.5f, 2f);
         computeSheetW();
         build();
         loadBrush();
@@ -135,7 +143,7 @@ public class PadActivity extends Activity {
 
     private void computeSheetW() {
         int sw = getResources().getDisplayMetrics().widthPixels;
-        sheetW = Math.min(sw - dp(16), dp(760));
+        sheetW = Math.round(Math.min(sw - dp(16), dp(760)) * zoom);
     }
 
     private void handleIntent(Intent i) {
@@ -179,6 +187,9 @@ public class PadActivity extends Activity {
         tcol.addView(subTitle);
         tcol.setOnClickListener(v -> openDrawer());
         topBar.addView(tcol, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView scanBtn = Ui.icon(this, th, "⎚", v -> openScanner());
+        scanBtn.setContentDescription("scanner");
+        topBar.addView(scanBtn);
         topBar.addView(Ui.icon(this, th, "▤", v -> sheetPanel()));
         topBar.addView(Ui.icon(this, th, "✒", v -> quillPanel()));
         topBar.addView(Ui.icon(this, th, "⇩", v -> exportPanel()));
@@ -191,18 +202,57 @@ public class PadActivity extends Activity {
         // ---------- desk + sheet
         scroll = new ScrollView(this) {
             /** In brush mode a finger on the sheet always paints (two fingers scroll, handled by the ink layer). */
-            @Override public boolean onInterceptTouchEvent(android.view.MotionEvent e) {
-                if (brushMode && sheet != null) {
-                    float y = e.getY() + getScrollY() - desk.getTop(), x = e.getX();
-                    if (x >= sheet.getLeft() && x <= sheet.getRight() && y >= sheet.getTop() && y <= sheet.getBottom()) return false;
+            @Override public boolean onInterceptTouchEvent(MotionEvent e) {
+                if (onSheet(e.getX() + hscroll.getScrollX(), e.getY() + getScrollY())) return false;
+                return super.onInterceptTouchEvent(e);
+            }
+            /** Pinch anywhere = zoom of the sheet. */
+            @Override public boolean dispatchTouchEvent(MotionEvent e) {
+                if (pinch != null) pinch.onTouchEvent(e);
+                int a = e.getActionMasked();
+                if (pinching) {
+                    if (!pinchCancelled) {
+                        pinchCancelled = true;
+                        MotionEvent c = MotionEvent.obtain(e); c.setAction(MotionEvent.ACTION_CANCEL);
+                        super.dispatchTouchEvent(c); c.recycle();
+                    }
+                    if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) { pinching = false; pinchCancelled = false; }
+                    return true;
                 }
+                return super.dispatchTouchEvent(e);
+            }
+        };
+        pinch = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override public boolean onScaleBegin(ScaleGestureDetector d) {
+                pinching = true; pinchStartZoom = zoom; pinchScale = 1f;
+                pinchFx = d.getFocusX(); pinchFy = d.getFocusY();
+                sheet.setPivotX(pinchFx + hscroll.getScrollX() - sheet.getLeft());
+                sheet.setPivotY(pinchFy + scroll.getScrollY() - sheet.getTop());
+                return true;
+            }
+            @Override public boolean onScale(ScaleGestureDetector d) {
+                pinchScale *= d.getScaleFactor();
+                float z = Ui.clamp(pinchStartZoom * pinchScale, 0.5f, 2f), k = z / pinchStartZoom;
+                sheet.setScaleX(k); sheet.setScaleY(k);
+                zoomLbl.setText(Math.round(z * 100) + "%");
+                return true;
+            }
+            @Override public void onScaleEnd(ScaleGestureDetector d) {
+                setZoom(pinchStartZoom * pinchScale, pinchFx, pinchFy);
+            }
+        });
+        pinch.setQuickScaleEnabled(false);
+        hscroll = new HorizontalScrollView(this) {
+            @Override public boolean onInterceptTouchEvent(MotionEvent e) {
+                if (onSheet(e.getX() + getScrollX(), e.getY())) return false;
                 return super.onInterceptTouchEvent(e);
             }
         };
+        hscroll.setFillViewport(true);
         scroll.setFillViewport(true);
         desk = new Views.Desk(this, th);
         desk.setClipChildren(false);
-        desk.setPadding(0, dp(16), 0, dp(180));
+        desk.setPadding(dp(8), dp(16), dp(8), dp(180));
         sheet = new SheetView(this);
         sheet.setElevation(dp(8));
         ed = new Editor(this, editorListener);
@@ -211,7 +261,8 @@ public class PadActivity extends Activity {
         sheet.ink.accent = th.accent;
         desk.sheet = sheet;
         desk.addView(sheet, new FrameLayout.LayoutParams(sheetW, -2, Gravity.TOP | Gravity.CENTER_HORIZONTAL));
-        scroll.addView(desk, new FrameLayout.LayoutParams(-1, -2));
+        hscroll.addView(desk, new FrameLayout.LayoutParams(-2, -1));
+        scroll.addView(hscroll, new FrameLayout.LayoutParams(-1, -2));
         main.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
 
         // ---------- stats line
@@ -223,6 +274,17 @@ public class PadActivity extends Activity {
         statsRow.addView(stats, new LinearLayout.LayoutParams(0, -2, 1f));
         saved = Ui.text(this, "● SALVATO", 10, th.accent, true);
         statsRow.addView(saved);
+        TextView zo = Ui.text(this, "  −  ", 15, th.fg, true);
+        zo.setOnClickListener(v -> { Ui.tick(v); stepZoom(-1); });
+        zoomLbl = Ui.text(this, Math.round(zoom * 100) + "%", 10, th.accent, true);
+        zoomLbl.setOnClickListener(v -> { Ui.tick(v); setZoom(1f, scroll.getWidth() / 2f, scroll.getHeight() / 2f); });
+        zoomLbl.setContentDescription("zoom");
+        zo.setContentDescription("zoom meno");
+        TextView zi = Ui.text(this, "  +  ", 15, th.fg, true);
+        zi.setContentDescription("zoom piu");
+        zi.setOnClickListener(v -> { Ui.tick(v); stepZoom(1); });
+        LinearLayout.LayoutParams zl = new LinearLayout.LayoutParams(-2, -2); zl.leftMargin = dp(10);
+        statsRow.addView(zo, zl); statsRow.addView(zoomLbl); statsRow.addView(zi);
         main.addView(statsRow, new LinearLayout.LayoutParams(-1, -2));
 
         // ---------- tool bars
@@ -351,6 +413,9 @@ public class PadActivity extends Activity {
         pick.addView(brushLbl);
         pick.setOnClickListener(v -> { Ui.tick(v); brushPanel(); });
         row.addView(pick);
+        shapeBtn = Ui.icon(this, th, "◇", v -> shapePanel());
+        shapeBtn.setContentDescription("forme");
+        row.addView(shapeBtn);
         row.addView(Ui.text(this, "  ⌀", 14, th.muted, true));
         sizeBar = new SeekBar(this); sizeBar.setMax(79);
         sizeBar.setOnSeekBarChangeListener(seek(v -> { sheet.ink.size = (v + 1) / 2f; pr.put("brushSize", sheet.ink.size); refreshBrushUi(); }));
@@ -818,6 +883,7 @@ public class PadActivity extends Activity {
 
     private void setMode(boolean b, boolean anim) {
         brushMode = b;
+        sheet.ink.commitActive();
         sheet.ink.enabled = b;
         ed.setTextMode(!b);
         modeSw.set(b, anim);
@@ -1067,14 +1133,18 @@ public class PadActivity extends Activity {
         k.opacity = pr.f("brushOpacity", 1f);
         k.sym = pr.i("sym", 0);
         k.emoji = pr.s("stamp", "⭐");
+        k.shape = pr.s("shape", "rettangolo");
+        k.fill = pr.i("fill", 0);
         sheet.setInkBelow(pr.b("inkBelow", false));
     }
 
     private void refreshBrushUi() {
         if (brushThumb == null || page == null) return;
         InkView k = sheet.ink;
-        brushThumb.set(Brushes.preview(k.brush, k.color, Math.max(2f, k.size), Math.max(0.3f, k.opacity), k.emoji, dp(70), dp(28), page.style.paper));
-        brushLbl.setText(Brushes.NAMES[Brushes.index(k.brush)]);
+        boolean shp = "forma".equals(k.brush);
+        brushThumb.set(Brushes.preview(k.brush, k.color, Math.max(2f, k.size), Math.max(0.3f, k.opacity), shp ? k.shape : k.emoji, dp(70), dp(28), page.style.paper));
+        brushLbl.setText(shp ? "FORMA · " + Brushes.SHAPE_NAMES[Math.max(0, java.util.Arrays.asList(Brushes.SHAPES).indexOf(k.shape))] : Brushes.NAMES[Brushes.index(k.brush)]);
+        Ui.iconOn(this, th, shapeBtn, shp);
         brushDot.set(k.color);
         sizeBar.setProgress(Math.round(k.size * 2) - 1);
         opBar.setProgress(Math.round(k.opacity * 100) - 5);
@@ -1112,6 +1182,7 @@ public class PadActivity extends Activity {
             cell.animate().alpha(1f).translationY(0).setStartDelay(25L * i).setDuration(240).start();
             cell.setOnClickListener(v -> {
                 Ui.tick(v);
+                sheet.ink.commitActive();
                 sheet.ink.brush = key; pr.put("brush", key);
                 for (int j = 0; j < all.size(); j++) {
                     boolean s = Brushes.KEYS[j].equals(key);
@@ -1162,6 +1233,91 @@ public class PadActivity extends Activity {
         pn.show();
     }
 
+    /* ================================================================ zoom */
+    private boolean onSheet(float x, float y) {
+        return brushMode && sheet != null && x >= sheet.getLeft() && x <= sheet.getRight() && y >= sheet.getTop() && y <= sheet.getBottom();
+    }
+
+    private static final float[] ZOOMS = {0.5f, 0.67f, 0.8f, 1f, 1.25f, 1.5f, 1.75f, 2f};
+    private void stepZoom(int d) {
+        int i = 0; float best = 9;
+        for (int k = 0; k < ZOOMS.length; k++) if (Math.abs(ZOOMS[k] - zoom) < best) { best = Math.abs(ZOOMS[k] - zoom); i = k; }
+        i = Math.max(0, Math.min(ZOOMS.length - 1, i + d));
+        setZoom(ZOOMS[i], scroll.getWidth() / 2f, scroll.getHeight() / 2f);
+    }
+
+    /** Re-lays the sheet at a new width: text, lines and ink stay sharp (everything is in sheet units). */
+    private void setZoom(float z, float fx, float fy) {
+        z = Ui.clamp(Math.round(z * 100) / 100f, 0.5f, 2f);
+        float old = zoom;
+        float cx = fx + hscroll.getScrollX() - sheet.getLeft(), cy = fy + scroll.getScrollY() - sheet.getTop();
+        sheet.setScaleX(1f); sheet.setScaleY(1f);
+        zoomLbl.setText(Math.round(z * 100) + "%");
+        if (Math.abs(z - old) < 0.005f) return;
+        sheet.ink.commitActive();
+        zoom = z; pr.put("zoom", z);
+        computeSheetW();
+        FrameLayout.LayoutParams sl = (FrameLayout.LayoutParams) sheet.getLayoutParams();
+        sl.width = sheetW; sheet.setLayoutParams(sl);
+        applyStyle();
+        final float k = z / old;
+        desk.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override public void onGlobalLayout() {
+                desk.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                hscroll.scrollTo(Math.round(sheet.getLeft() + cx * k - fx), 0);
+                scroll.scrollTo(0, Math.round(sheet.getTop() + cy * k - fy));
+                desk.invalidate();
+            }
+        });
+        Ui.clock(scroll);
+    }
+
+    /* ================================================================ shapes */
+    private void shapePanel() {
+        Panel pn = new Panel(this, th, "FORME");
+        pn.note("Trascina sul foglio per disegnare la forma; poi spostala, ridimensionala con le maniglie o eliminala con ✕. Suggerimento: disegna a mano un cerchio o un rettangolo e tieni fermo il dito: diventa perfetto.");
+        List<LinearLayout> cells = pn.grid(Brushes.SHAPES.length, 5);
+        List<LinearLayout> all = new ArrayList<>(cells);
+        boolean onShape = "forma".equals(sheet.ink.brush);
+        for (int i = 0; i < Brushes.SHAPES.length; i++) {
+            final String key = Brushes.SHAPES[i];
+            LinearLayout cell = cells.get(i);
+            cell.setPadding(dp(4), dp(6), dp(4), dp(6));
+            boolean sel = onShape && key.equals(sheet.ink.shape);
+            cell.setBackground(Ui.round(sel ? Theme.a(th.accent, 40) : th.panel2, sel ? th.accent : th.border, dp(sel ? 2 : 1), dp(th.round + 2)));
+            Views.Thumb t = new Views.Thumb(this);
+            t.set(Brushes.preview("forma", sheet.ink.color, 2.5f, 1f, key, dp(56), dp(40), page.style.paper));
+            cell.addView(t, new LinearLayout.LayoutParams(-1, dp(40)));
+            TextView n = Ui.text(this, Brushes.SHAPE_NAMES[i], 8.5f, th.fg, true);
+            n.setGravity(Gravity.CENTER); n.setSingleLine(true);
+            cell.addView(n);
+            cell.setContentDescription("forma " + Brushes.SHAPE_NAMES[i]);
+            cell.setOnClickListener(v -> {
+                Ui.tick(v);
+                sheet.ink.commitActive();
+                sheet.ink.brush = "forma"; sheet.ink.shape = key;
+                pr.put("brush", "forma"); pr.put("shape", key);
+                for (int j = 0; j < all.size(); j++) {
+                    boolean s2 = Brushes.SHAPES[j].equals(key);
+                    all.get(j).setBackground(Ui.round(s2 ? Theme.a(th.accent, 40) : th.panel2, s2 ? th.accent : th.border, dp(s2 ? 2 : 1), dp(th.round + 2)));
+                }
+                refreshBrushUi(); applyQuill();
+                toast("◇ " + Brushes.SHAPE_NAMES[java.util.Arrays.asList(Brushes.SHAPES).indexOf(key)] + " · trascina sul foglio");
+                pn.dismiss();
+            });
+        }
+        pn.section("RIEMPIMENTO");
+        pn.chips(Brushes.FILL_NAMES, sheet.ink.fill, i -> { sheet.ink.fill = i; pr.put("fill", i); });
+        pn.note("Colore, spessore e opacità sono quelli del pennello. Funzionano anche con la simmetria.");
+        pn.show();
+    }
+
+    private void openScanner() {
+        saveNow();
+        startActivity(new Intent(this, ScanActivity.class));
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
     private void toggleLayer() {
         boolean b = !sheet.inkBelow;
         pr.put("inkBelow", b);
@@ -1188,6 +1344,7 @@ public class PadActivity extends Activity {
         pn.action("⎙", "PDF · FOGLIO", "A4 in Download/AmpyPad, testo vettoriale", () -> { pn.dismiss(); h.postDelayed(() -> exportPdf(false), 230); });
         pn.action("⎘", "PDF · TUTTO IL QUADERNO", "un fascicolo con tutti i fogli", () -> { pn.dismiss(); h.postDelayed(() -> exportPdf(true), 230); });
         pn.action("⇪", "CONDIVIDI COME IMMAGINE", null, () -> { pn.dismiss(); h.postDelayed(() -> exportPng(1f, false, true), 230); });
+        pn.action("⎚", "SCANSIONA DOCUMENTI", "foto → bordi e curve corretti → PDF → email", () -> { pn.dismiss(); openScanner(); });
         pn.section("BACKUP");
         pn.action("⇩", "BACKUP DI TUTTI I QUADERNI (.json)", null, () -> { pn.dismiss(); backup(); });
         pn.action("⇪", "IMPORTA UN BACKUP", "aggiunge i quaderni senza cancellare i tuoi", () -> { pn.dismiss(); importBackup(); });
@@ -1213,6 +1370,7 @@ public class PadActivity extends Activity {
         ed.syncAll();
         View f = getCurrentFocus(); if (f != null) f.clearFocus();
         ed.hideKeyboard();
+        sheet.ink.commitActive();
         ed.exportMode(true);
         boolean was = sheet.ink.enabled;
         sheet.ink.enabled = false;
@@ -1435,7 +1593,7 @@ public class PadActivity extends Activity {
         @Override public void onInk(float x, float y) { quill.write(x, y); Sfx.scratch(); }
         @Override public void onInkDone() { }
         @Override public void onStrokesChanged() { scheduleSave(); refreshUndo(); updateStats(); sheet.requestLayout(); }
-        @Override public void onScrollBy(float dy) { scroll.scrollBy(0, Math.round(dy)); }
-        @Override public void onStraightened() { toast("— LINEA DRITTA"); }
+        @Override public void onScrollBy(float dx, float dy) { scroll.scrollBy(0, Math.round(dy)); hscroll.scrollBy(Math.round(dx), 0); }
+        @Override public void onShapeHint(String msg) { toast(msg); }
     };
 }

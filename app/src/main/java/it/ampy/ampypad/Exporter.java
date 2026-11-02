@@ -85,6 +85,31 @@ public final class Exporter {
         return u;
     }
 
+    /** Saves raw PDF bytes in Download/AmpyPad. */
+    public static Uri savePdfBytes(Context ctx, byte[] bytes, String name) throws IOException {
+        ContentResolver cr = ctx.getContentResolver();
+        ContentValues v = new ContentValues();
+        v.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+        v.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+        Uri coll;
+        if (Build.VERSION.SDK_INT >= 29) {
+            v.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/AmpyPad");
+            coll = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        } else {
+            File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "AmpyPad");
+            if (!dir.exists() && !dir.mkdirs()) throw new IOException("cartella non creata");
+            v.put(MediaStore.MediaColumns.DATA, new File(dir, name).getAbsolutePath());
+            coll = MediaStore.Files.getContentUri("external");
+        }
+        Uri u = cr.insert(coll, v);
+        if (u == null) throw new IOException("MediaStore insert fallito");
+        try (OutputStream o = cr.openOutputStream(u)) {
+            if (o == null) throw new IOException("stream nullo");
+            o.write(bytes);
+        }
+        return u;
+    }
+
     public static Uri savePdf(Context ctx, PdfDocument doc, String name) throws IOException {
         ContentResolver cr = ctx.getContentResolver();
         ContentValues v = new ContentValues();

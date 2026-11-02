@@ -51,6 +51,26 @@ In modalità pennello diventa un pennello intinto nel colore scelto.
 - **nuovo foglio con animazione**: sfoglia, scivola, dissolvi, caduta sulla pila, vortice, glitch neon
 - quaderni, fogli fissati, ricerca nel testo, sposta / duplica / elimina
 
+## Zoom
+Pizzica con due dita ovunque sul foglio, oppure **− 100% +** nella barra in basso (50% → 200%). Il foglio viene
+re-impaginato alla nuova dimensione: testo, righe e disegni restano nitidi. Con lo zoom il foglio scorre anche in orizzontale.
+
+## Forme
+Nel pennello tocca **◇**: linea, freccia, rettangolo, rettangolo arrotondato, ellisse, triangolo, rombo, stella, cuore, fumetto,
+con contorno, pieno o contorno + velatura (colore, spessore e opacità del pennello; funzionano anche con la simmetria).
+Dopo averla disegnata la forma resta **modificabile**: trascinala per spostarla, usa le maniglie per ridimensionarla, ✕ per eliminarla.
+**Forme perfette**: disegna a mano un cerchio, un rettangolo o un triangolo e tieni fermo il dito → diventa perfetto (e modificabile).
+
+## Scanner documenti ⎚
+Dalla barra in alto (⎚) o da ESPORTA → SCANSIONA DOCUMENTI:
+1. **Scatta** con la fotocamera o scegli una o più foto dalla **galleria**
+2. **Rilevamento automatico dei bordi** del foglio (anche su sfondi colorati); angoli trascinabili con lente d'ingrandimento
+3. **Correzione della prospettiva** e dei **bordi curvi** (pagine di libri, fogli piegati): i punti a metà lato curvano i bordi e il foglio viene "spianato"
+4. **Pulizia**: Documento (toglie ombre e luce irregolare), Colori vivi, Grigio, Bianco e nero, Originale · rotazione
+5. **PDF multipagina** (qualità leggera / media / alta, file piccoli adatti all'email) in `Download/AmpyPad`
+6. **✉ Invia per email**: si apre l'app di posta con destinatario, oggetto e PDF già allegato
+Tutto in Java puro, senza OpenCV né librerie esterne.
+
 ## Esporta
 PNG (anche ×2 e solo disegno trasparente) in `Immagini/AmpyPad`, PDF A4 del foglio o di **tutto il quaderno** in
 `Download/AmpyPad` (testo vettoriale), condivisione, backup e importazione `.json`.

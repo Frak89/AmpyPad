@@ -25,6 +25,11 @@ public final class Brushes {
         "polvere di gesso", "luce al neon Ampy", "colori che scorrono", "emoji lungo il tratto", "cancella il disegno"};
     public static final String[] GLYPHS = {"✒", "✑", "✏", "▮", "▬", "◍", "∷", "▧", "⚡", "◠", "★", "⌫"};
 
+    public static final String[] SHAPES = {"linea", "freccia", "rettangolo", "arrotondato", "ellisse", "triangolo", "rombo", "stella", "cuore", "fumetto"};
+    public static final String[] SHAPE_NAMES = {"LINEA", "FRECCIA", "RETTANGOLO", "ARROTONDATO", "ELLISSE", "TRIANGOLO", "ROMBO", "STELLA", "CUORE", "FUMETTO"};
+    public static final String[] SHAPE_GLYPHS = {"╱", "➚", "▭", "▢", "◯", "△", "◇", "☆", "♡", "◔"};
+    public static final String[] FILL_NAMES = {"CONTORNO", "PIENO", "CONTORNO + VELATURA"};
+
     public static final String[] SYM_NAMES = {"NESSUNA", "SPECCHIO", "4 QUADRANTI", "RADIALE ×6", "RADIALE ×8", "CALEIDOSCOPIO ×12"};
     public static final String[] STAMPS = {"⭐", "❤️", "🌸", "✨", "🔥", "🎈", "🍀", "🦋", "🌙", "☀️", "🎵", "💎", "🐾", "🍓", "🌈", "👑", "⚡", "🎯", "📌", "✅"};
 
@@ -293,6 +298,7 @@ public final class Brushes {
                 }
                 break;
             }
+            case "forma": shape(c, s, op, p); break;
             case "gomma": {
                 p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(sz * 2.6f); p.setXfermode(CLEAR); p.setColor(0xff000000);
                 c.drawPath(smoothPath(s), p);
@@ -312,6 +318,97 @@ public final class Brushes {
         }
     }
 
+    /* ================================================================ shapes */
+    /** Geometry of a shape stroke: pts[0] = first corner / start, pts[1] = opposite corner / end. */
+    public static Path shapePath(Model.Stroke s) {
+        Path q = new Path();
+        float x0 = s.pts[0], y0 = s.pts[1], x1 = s.n > 1 ? s.pts[3] : x0, y1 = s.n > 1 ? s.pts[4] : y0;
+        float l = Math.min(x0, x1), r = Math.max(x0, x1), t = Math.min(y0, y1), b = Math.max(y0, y1);
+        float w = r - l, h = b - t, cx = (l + r) / 2, cy = (t + b) / 2;
+        switch (s.shape) {
+            case "linea": case "freccia": q.moveTo(x0, y0); q.lineTo(x1, y1); break;
+            case "arrotondato": { float rr = Math.min(w, h) * 0.22f; q.addRoundRect(new android.graphics.RectF(l, t, r, b), rr, rr, Path.Direction.CW); break; }
+            case "ellisse": q.addOval(new android.graphics.RectF(l, t, r, b), Path.Direction.CW); break;
+            case "triangolo": q.moveTo(cx, t); q.lineTo(r, b); q.lineTo(l, b); q.close(); break;
+            case "rombo": q.moveTo(cx, t); q.lineTo(r, cy); q.lineTo(cx, b); q.lineTo(l, cy); q.close(); break;
+            case "stella":
+                for (int i = 0; i < 10; i++) {
+                    double a = Math.PI * i / 5 - Math.PI / 2; float k = i % 2 == 0 ? 1f : 0.42f;
+                    float px = cx + (float) Math.cos(a) * w / 2 * k, py = cy + 0.06f * h + (float) Math.sin(a) * h / 2 * k * 1.05f;
+                    if (i == 0) q.moveTo(px, py); else q.lineTo(px, py);
+                }
+                q.close(); break;
+            case "cuore":
+                q.moveTo(cx, b);
+                q.cubicTo(l - w * 0.05f, t + h * 0.62f, l, t + h * 0.05f, cx - w * 0.25f, t + h * 0.02f);
+                q.cubicTo(cx - w * 0.08f, t, cx, t + h * 0.12f, cx, t + h * 0.25f);
+                q.cubicTo(cx, t + h * 0.12f, cx + w * 0.08f, t, cx + w * 0.25f, t + h * 0.02f);
+                q.cubicTo(r, t + h * 0.05f, r + w * 0.05f, t + h * 0.62f, cx, b);
+                q.close(); break;
+            case "fumetto": {
+                float bb = t + h * 0.78f, rr = Math.min(w, h) * 0.2f;
+                q.addRoundRect(new android.graphics.RectF(l, t, r, bb), rr, rr, Path.Direction.CW);
+                Path tail = new Path();
+                tail.moveTo(l + w * 0.22f, bb - 1); tail.lineTo(l + w * 0.12f, b); tail.lineTo(l + w * 0.42f, bb - 1); tail.close();
+                q.op(tail, Path.Op.UNION);
+                break;
+            }
+            default: q.addRect(l, t, r, b, Path.Direction.CW); break;
+        }
+        return q;
+    }
+
+    private static void shape(Canvas c, Model.Stroke s, float op, Paint p) {
+        Path q = shapePath(s);
+        boolean line = "linea".equals(s.shape) || "freccia".equals(s.shape);
+        if (!line && s.fill > 0) {
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(alpha(s.color, op * (s.fill == 1 ? 1f : 0.22f)));
+            c.drawPath(q, p);
+        }
+        if (line || s.fill != 1) {
+            p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(Math.max(0.4f, s.size)); p.setColor(alpha(s.color, op));
+            c.drawPath(q, p);
+        }
+        if ("freccia".equals(s.shape) && s.n > 1) {
+            float x0 = s.pts[0], y0 = s.pts[1], x1 = s.pts[3], y1 = s.pts[4];
+            double a = Math.atan2(y1 - y0, x1 - x0);
+            float len = (float) Math.max(s.size * 4 + 4, Math.hypot(x1 - x0, y1 - y0) * 0.16f);
+            Path head = new Path();
+            head.moveTo(x1, y1);
+            head.lineTo(x1 - len * (float) Math.cos(a - 0.45), y1 - len * (float) Math.sin(a - 0.45));
+            head.lineTo(x1 - len * (float) Math.cos(a + 0.45), y1 - len * (float) Math.sin(a + 0.45));
+            head.close();
+            p.setStyle(Paint.Style.FILL_AND_STROKE); p.setStrokeWidth(Math.max(0.4f, s.size * 0.6f));
+            c.drawPath(head, p);
+        }
+    }
+
+    /** Freehand stroke → perfect shape (ellipse / rectangle / triangle) if it is closed. Returns null otherwise. */
+    public static String recognize(Model.Stroke s) {
+        if (s.n < 12) return null;
+        float minX = 1e9f, minY = 1e9f, maxX = -1e9f, maxY = -1e9f, len = 0;
+        for (int i = 0; i < s.n; i++) {
+            float x = s.pts[i * 3], y = s.pts[i * 3 + 1];
+            minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+            if (i > 0) len += (float) Math.hypot(x - s.pts[i * 3 - 3], y - s.pts[i * 3 - 2]);
+        }
+        float w = maxX - minX, h = maxY - minY, diag = (float) Math.hypot(w, h);
+        if (w < 8 || h < 8) return null;
+        float gap = (float) Math.hypot(s.pts[0] - s.pts[(s.n - 1) * 3], s.pts[1] - s.pts[(s.n - 1) * 3 + 1]);
+        if (gap > diag * 0.28f || len < diag * 1.6f) return null;
+        double area = 0;
+        for (int i = 0; i < s.n; i++) {
+            int j = (i + 1) % s.n;
+            area += s.pts[i * 3] * s.pts[j * 3 + 1] - s.pts[j * 3] * s.pts[i * 3 + 1];
+        }
+        float ratio = (float) Math.abs(area / 2) / (w * h);
+        if (ratio > 0.86f) return "rettangolo";
+        if (ratio > 0.64f) return "ellisse";
+        if (ratio > 0.38f) return "triangolo";
+        return null;
+    }
+
     /** Small preview of a brush head (wave), used by the brush picker and the bottom bar. */
     public static Bitmap preview(String brush, int color, float size, float opacity, String emoji, int w, int h, int bg) {
         Bitmap b = Bitmap.createBitmap(Math.max(1, w), Math.max(1, h), Bitmap.Config.ARGB_8888);
@@ -321,6 +418,11 @@ public final class Brushes {
         c.save(); c.scale(u, u);
         float hh = h / u;
         Model.Stroke s = new Model.Stroke();
+        if ("forma".equals(brush)) {
+            s.brush = "forma"; s.shape = emoji; s.color = color; s.size = Ui.clamp(size, 1.2f, hh / 8f); s.opacity = opacity; s.fill = 2;
+            s.add(30, hh * 0.18f, s.size); s.add(70, hh * 0.82f, s.size);
+            render(c, s); c.restore(); return b;
+        }
         s.brush = "gomma".equals(brush) ? "penna" : brush; s.color = "gomma".equals(brush) ? 0x55888888 : color;
         s.size = Ui.clamp(size, 1.2f, hh / 5f); s.opacity = opacity; s.emoji = emoji; s.seed = 42;
         for (int i = 0; i <= 26; i++) {

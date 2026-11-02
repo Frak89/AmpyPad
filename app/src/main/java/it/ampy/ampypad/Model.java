@@ -82,8 +82,8 @@ public final class Model {
 
     /* ================================================================ ink stroke (sheet units, 400 = sheet width) */
     public static final class Stroke {
-        public String brush = "penna", emoji = "⭐";
-        public int color = 0xff1f3a93, sym, seed = RND.nextInt(1 << 30);
+        public String brush = "penna", emoji = "⭐", shape = "rettangolo";
+        public int color = 0xff1f3a93, sym, seed = RND.nextInt(1 << 30), fill;
         public float size = 3, opacity = 1, cx, cy;
         public float[] pts = new float[96];
         public int n; // number of points (each point = x, y, w)
@@ -94,6 +94,12 @@ public final class Model {
                 pts = np;
             }
             pts[n * 3] = x; pts[n * 3 + 1] = y; pts[n * 3 + 2] = w; n++;
+        }
+        public Stroke copy() {
+            Stroke c = new Stroke();
+            c.brush = brush; c.emoji = emoji; c.shape = shape; c.color = color; c.sym = sym; c.seed = seed; c.fill = fill;
+            c.size = size; c.opacity = opacity; c.cx = cx; c.cy = cy; c.pts = pts.clone(); c.n = n;
+            return c;
         }
         public float maxY() { float m = 0; for (int i = 0; i < n; i++) m = Math.max(m, pts[i * 3 + 1]); return m; }
         JSONObject json() throws JSONException {
@@ -106,6 +112,7 @@ public final class Model {
                 .put("seed", seed).put("p", sb.toString());
             if (sym != 0) o.put("sym", sym).put("cx", cx).put("cy", cy);
             if ("timbro".equals(brush)) o.put("e", emoji);
+            if ("forma".equals(brush)) o.put("sh", shape).put("fi", fill);
             return o;
         }
         static Stroke from(JSONObject o) {
@@ -114,6 +121,7 @@ public final class Model {
             s.size = (float) o.optDouble("s", 3); s.opacity = (float) o.optDouble("o", 1);
             s.seed = o.optInt("seed", 1); s.sym = o.optInt("sym"); s.cx = (float) o.optDouble("cx", 200); s.cy = (float) o.optDouble("cy", 280);
             s.emoji = o.optString("e", "⭐");
+            s.shape = o.optString("sh", "rettangolo"); s.fill = o.optInt("fi");
             String p = o.optString("p", "");
             if (!p.isEmpty()) {
                 String[] t = p.split(",");
