@@ -49,6 +49,8 @@ shot 08_pannello_pennelli
 tap "ACQUERELLO"
 sleep 1
 curve 400 1000 160 1
+XY=$(python3 $F "ACQUERELLO") && set -- $XY && adb shell input swipe 1000 $2 150 $2 300
+sleep 1
 tap "colore pennello"
 sleep 1.5
 shot 09_tavolozza
@@ -85,7 +87,17 @@ shot 17_esporta
 tap "PDF · FOGLIO"
 sleep 5
 shot 18_pdf
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+tap "◀"
+sleep 2
+tap "⇩"
+sleep 1.2
+tap "PNG · FOGLIO"
+sleep 5
 adb shell ls -la /sdcard/Download/AmpyPad/ > $OUT/files.txt 2>&1
+adb pull /sdcard/Download/AmpyPad $OUT/pdf
+adb pull /sdcard/Pictures/AmpyPad $OUT/png
 adb shell ls -la /sdcard/Pictures/AmpyPad/ >> $OUT/files.txt 2>&1
 adb logcat -d > $OUT/logcat.txt
 grep -E "FATAL|AndroidRuntime|ampypad" $OUT/logcat.txt | head -80 > $OUT/errors.txt

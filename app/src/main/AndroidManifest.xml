@@ -18,7 +18,8 @@
         android:theme="@style/PadTheme"
         android:largeHeap="true"
         android:hardwareAccelerated="true"
-        android:allowBackup="true">
+        android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".PadActivity"

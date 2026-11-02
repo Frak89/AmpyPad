@@ -189,7 +189,16 @@ public class PadActivity extends Activity {
         main.addView(line, new LinearLayout.LayoutParams(-1, Math.max(1, dp(1))));
 
         // ---------- desk + sheet
-        scroll = new ScrollView(this);
+        scroll = new ScrollView(this) {
+            /** In brush mode a finger on the sheet always paints (two fingers scroll, handled by the ink layer). */
+            @Override public boolean onInterceptTouchEvent(android.view.MotionEvent e) {
+                if (brushMode && sheet != null) {
+                    float y = e.getY() + getScrollY() - desk.getTop(), x = e.getX();
+                    if (x >= sheet.getLeft() && x <= sheet.getRight() && y >= sheet.getTop() && y <= sheet.getBottom()) return false;
+                }
+                return super.onInterceptTouchEvent(e);
+            }
+        };
         scroll.setFillViewport(true);
         desk = new Views.Desk(this, th);
         desk.setClipChildren(false);

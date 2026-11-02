@@ -167,7 +167,23 @@ public final class Editor implements BlockEdit.Host {
         setHandlesVisible(!on);
         title.setHint(on ? "" : "Senza titolo");
         title.setCursorVisible(!on);
-        for (Row r : rows) if (r.edit != null) { r.edit.setHint(on ? "" : hint(r.b.type, r.edit.hasFocus())); r.edit.setCursorVisible(!on); }
+        for (Row r : rows) if (r.edit != null) {
+            r.edit.setHint(on ? "" : hint(r.b.type, r.edit.hasFocus()));
+            r.edit.setCursorVisible(!on);
+            noSpell(r.edit, on);
+        }
+        noSpell(title, on);
+    }
+
+    /** Spell-check underlines must not end up in PNG / PDF. */
+    private static void noSpell(BlockEdit e, boolean on) {
+        int t = e.getInputType();
+        int nt = on ? t | android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS : t & ~android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+        if (nt != t) e.setInputType(nt);
+        if (on) {
+            android.text.Editable ed = e.getText();
+            for (android.text.style.SuggestionSpan sp : ed.getSpans(0, ed.length(), android.text.style.SuggestionSpan.class)) ed.removeSpan(sp);
+        }
     }
 
     public void hideKeyboard() {
