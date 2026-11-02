@@ -2,6 +2,8 @@ name: Smoke test AmpyPad (emulator)
 # Manual: Actions → "Smoke test AmpyPad (emulator)" → Run workflow. Screenshots land on branch smoke-results.
 on:
   workflow_dispatch:
+  push:
+    branches: [ "ampypad-*" ]
 jobs:
   smoke:
     runs-on: ubuntu-latest

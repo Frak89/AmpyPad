@@ -132,6 +132,25 @@ public class ScanActivity extends Activity {
             backCb = cb;
         }
         showList();
+        handleShare(getIntent());
+    }
+
+    @Override protected void onNewIntent(Intent i) { super.onNewIntent(i); handleShare(i); }
+
+    /** Photos shared from other apps (gallery, WhatsApp…) go straight to the scanner. */
+    @SuppressWarnings("deprecation")
+    private void handleShare(Intent i) {
+        if (i == null) return;
+        List<Uri> us = new ArrayList<>();
+        if (Intent.ACTION_SEND.equals(i.getAction())) {
+            Uri u = i.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (u != null) us.add(u);
+        } else if (Intent.ACTION_SEND_MULTIPLE.equals(i.getAction())) {
+            ArrayList<Uri> l = i.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+            if (l != null) us.addAll(l);
+        }
+        i.setAction(null);
+        if (!us.isEmpty()) importUris(us);
     }
 
     @Override protected void onDestroy() { super.onDestroy(); ex.shutdown(); }

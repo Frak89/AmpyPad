@@ -385,6 +385,8 @@ public final class ScanCore {
         return out;
     }
 
+    private static final double EPS = 0.0045; // trims the blurred page border
+
     /** Perspective + curved-edge rectification of the page described by quad q. */
     public static Bitmap warp(Bitmap src, float[] q, int maxSide) {
         float wTop = edgeLen(q, 0), wBot = edgeLen(q, 2), hRight = edgeLen(q, 1), hLeft = edgeLen(q, 3);
@@ -404,10 +406,10 @@ public final class ScanCore {
             final int k0 = k, nT = threads;
             ts[k] = new Thread(() -> {
                 for (int Y = k0; Y < H; Y += nT) {
-                    double v = (Y + 0.5) / H;
+                    double v = EPS + (Y + 0.5) / H * (1 - 2 * EPS);
                     int vi = Math.min(H, Math.round((float) (v * H)));
                     for (int X = 0; X < W; X++) {
-                        double u = (X + 0.5) / W;
+                        double u = EPS + (X + 0.5) / W * (1 - 2 * EPS);
                         int ui = Math.min(W, Math.round((float) (u * W)));
                         double x = hm.x(u, v) + (1 - v) * top[0][ui] + v * bot[0][ui] + (1 - u) * lef[0][vi] + u * rig[0][vi];
                         double y = hm.y(u, v) + (1 - v) * top[1][ui] + v * bot[1][ui] + (1 - u) * lef[1][vi] + u * rig[1][vi];

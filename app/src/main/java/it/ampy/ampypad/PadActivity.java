@@ -279,7 +279,9 @@ public class PadActivity extends Activity {
         zoomLbl = Ui.text(this, Math.round(zoom * 100) + "%", 10, th.accent, true);
         zoomLbl.setOnClickListener(v -> { Ui.tick(v); setZoom(1f, scroll.getWidth() / 2f, scroll.getHeight() / 2f); });
         zoomLbl.setContentDescription("zoom");
+        zo.setContentDescription("zoom meno");
         TextView zi = Ui.text(this, "  +  ", 15, th.fg, true);
+        zi.setContentDescription("zoom piu");
         zi.setOnClickListener(v -> { Ui.tick(v); stepZoom(1); });
         LinearLayout.LayoutParams zl = new LinearLayout.LayoutParams(-2, -2); zl.leftMargin = dp(10);
         statsRow.addView(zo, zl); statsRow.addView(zoomLbl); statsRow.addView(zi);
